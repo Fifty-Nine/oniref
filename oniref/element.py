@@ -19,7 +19,7 @@ class Element:
     high_transition: Optional[Transition] = None
 
     @staticmethod
-    def from_klei(klei_dict: dict):
+    def from_klei(klei_dict: dict) -> Element:
         return Element(
             name=klei_dict['elementId'],
             specific_heat_capacity=Q(
@@ -43,5 +43,5 @@ class Element:
         )
 
     @property
-    def thermal_diffusivity(self):
+    def thermal_diffusivity(self) -> Q:
         return self.thermal_conductivity / self.specific_heat_capacity
