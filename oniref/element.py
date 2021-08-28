@@ -12,12 +12,14 @@ class Element:
                  specific_heat_capacity: Q,
                  thermal_conductivity: Q,
                  density: Q,
+                 mass_per_tile: Q,
                  low_transition: Optional[Transition] = None,
                  high_transition: Optional[Transition] = None):
         self.name = name
         self.specific_heat_capacity = specific_heat_capacity
         self.thermal_conductivity = thermal_conductivity
         self.density = density
+        self.mass_per_tile = mass_per_tile
         self.low_transition = low_transition
         self.high_transition = high_transition
 

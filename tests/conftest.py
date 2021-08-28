@@ -8,4 +8,5 @@ def water():
     return Element("Water",
                    Q(4.179, 'DTU/g/°C'),
                    Q(0.184, 'DTU/(m s)/°C'),
-                   Q(18.01528, 'g/mol'))
+                   Q(18.01528, 'g/mol'),
+                   Q(1000, 'g'))
