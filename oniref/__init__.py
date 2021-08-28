@@ -1,3 +1,3 @@
-from oniref.element import Element
+from oniref.elements import Element
 
 __all__ = ['Element']
