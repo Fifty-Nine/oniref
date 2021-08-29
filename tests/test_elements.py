@@ -1,9 +1,15 @@
 from oniref import Element
+from oniref.units import Q
 
 
 def test_diffusivity(water):
     assert water.thermal_diffusivity == (water.thermal_conductivity
-                                         / water.specific_heat_capacity)
+                                         / (water.specific_heat_capacity
+                                            * water.density))
+
+
+def test_density(water):
+    assert water.density == Q(1000, "kg / m^3")
 
 
 def test_from_klei_simple(water):

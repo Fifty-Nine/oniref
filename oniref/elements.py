@@ -1,6 +1,5 @@
 from __future__ import annotations
 from dataclasses import dataclass
-import math
 from os import PathLike
 from pathlib import Path
 from typing import Tuple, Optional, Union
@@ -11,16 +10,14 @@ from oniref.units import Q, maybeQ, registry
 
 Transition = Tuple[float, str]
 
+
 class BadDefinitionError(Exception):
     def __init__(self, elem, inner):
+        super().__init__(
+            self, f'Encountered bad definition for {elem}: {inner!s}'
+        )
         self.elem = elem
         self.inner = inner
-
-    def __str__(self):
-        return f'Encountered bad definition for {self.elem}: {self.inner!s}'
-
-    def __repr__(self):
-        return f'BadDefinitionError(elem={self.elem!r}, inner={self.inner!r}'
 
 
 def _read_transition(klei_dict: dict, prefix: str) -> Optional[Transition]:
@@ -65,15 +62,17 @@ class Element:
 
     @property
     def thermal_diffusivity(self) -> Optional[Q]:
-        if self.specific_heat_capacity.m == 0: return None
+        if self.specific_heat_capacity.m == 0:
+            return None
 
         density = self.density or Q(1, 'kg/m^3')
         return (self.thermal_conductivity
-                / (self.specific_heat_capacity * density))
+                / (self.specific_heat_capacity * density)).to_base_units()
 
     @property
     def density(self) -> Optional[Q]:
-        return (self.mass_per_tile / registry.parse_expression('1 m^3')
+        return ((self.mass_per_tile
+                 / registry.parse_expression('1 m^3').to_base_units())
                 if self.mass_per_tile is not None else None)
 
 
