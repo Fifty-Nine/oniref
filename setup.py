@@ -6,7 +6,7 @@ setup(
     description='Oxygen Not Included reference database',
     author_email='tim.prince@gmail.com',
     packages=find_packages(),
-    install_requires=['pint'],
+    install_requires=['pint', 'pyyaml'],
     entry_points={},
     tests_require=[
         'pytest',
