@@ -8,8 +8,18 @@ def test_diffusivity(water):
                                             * water.density))
 
 
+def test_diffusivity_missing_shc(water):
+    water.specific_heat_capacity = Q(0, 'DTU/g/degC')
+    assert water.thermal_diffusivity is None
+
+
 def test_density(water):
     assert water.density == Q(1000, "kg / m^3")
+
+
+def test_density_no_mpt(water):
+    water.mass_per_tile = None
+    assert water.density is None
 
 
 def test_from_klei_simple(water):

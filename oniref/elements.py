@@ -2,13 +2,23 @@ from __future__ import annotations
 from dataclasses import dataclass
 from os import PathLike
 from pathlib import Path
-from typing import Tuple, Optional, Union
+from typing import (IO,
+                    Optional,
+                    Tuple,
+                    Union)
 import yaml
 
 from oniref.units import Q, maybeQ, registry
 
 
 Transition = Tuple[float, str]
+
+
+class MissingElementsError(Exception):
+    def __init__(self):
+        super().__init__(
+            self, 'YAML file did not contain the expected "elements" key.'
+        )
 
 
 class BadDefinitionError(Exception):
@@ -76,18 +86,26 @@ class Element:
                 if self.mass_per_tile is not None else None)
 
 
-def load_klei_definitions(data_path: Union[PathLike, str]):
+def load_klei_definitions_from_file(yaml_in: IO) -> list[Element]:
+    try:
+        return [Element.from_klei(d) for d in yaml.load(yaml_in)['elements']]
+    except KeyError as e:
+        raise MissingElementsError from e
+
+
+def load_klei_definitions(data_path: Union[PathLike, str]) \
+        -> dict[str, Element]:
     if isinstance(data_path, str):
         data_path = Path(data_path)
 
     def load_one(name):
-        return yaml.load((data_path / name).open('r'))['elements']
+        return load_klei_definitions_from_file((data_path / name).open('r'))
 
     result = {}
     all_defs = (load_one("gas.yaml")
                 + load_one("liquid.yaml")
                 + load_one("solid.yaml"))
     for elem in all_defs:
-        result[elem['elementId']] = Element.from_klei(elem)
+        result[elem.name] = elem
 
     return result
