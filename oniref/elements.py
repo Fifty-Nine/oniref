@@ -2,16 +2,47 @@ from __future__ import annotations
 from dataclasses import dataclass
 from os import PathLike
 from pathlib import Path
-from typing import (IO,
+from typing import (Any,
+                    IO,
                     Optional,
-                    Tuple,
                     Union)
+from weakref import proxy, ProxyType
+
 import yaml
 
 from oniref.units import Q, maybeQ, registry
 
+#  pylint: disable=protected-access
 
-Transition = Tuple[float, str]
+
+class Transition:
+    temperature: Q
+    target: Union[str, ProxyType['Element']]
+
+    def __init__(self, temperature: Q, target: Union[str, Element]):
+        self.temperature = temperature
+        self.target = target if isinstance(target, str) else proxy(target)
+
+    def _name(self):
+        return (self.target if isinstance(self.target, str)
+                else self.target.name)
+
+    def _resolve(self, mapping):
+        self.target = proxy(mapping[self._name()])
+
+    def __eq__(self, o):
+        return (o.temperature == self.temperature
+                and o._name() == self._name())
+
+    @staticmethod
+    def read(klei_dict: dict[str, Any], prefix: str) -> Optional[Transition]:
+        temp = klei_dict.get(f'{prefix}Temp')
+        target = klei_dict.get(f'{prefix}TempTransitionTarget')
+
+        if temp is None or target is None:
+            return None
+
+        return Transition(Q(temp, '°K').to('°C'), target)
 
 
 class MissingElementsError(Exception):
@@ -28,13 +59,6 @@ class BadDefinitionError(Exception):
         )
         self.elem = elem
         self.inner = inner
-
-
-def _read_transition(klei_dict: dict, prefix: str) -> Optional[Transition]:
-    temp = klei_dict.get(f'{prefix}Temp')
-    target = klei_dict.get(f'{prefix}TempTransitionTarget')
-
-    return (temp, target) if temp is not None and target is not None else None
 
 
 @dataclass
@@ -62,8 +86,8 @@ class Element:
                     klei_dict['molarMass'], 'g/mol'
                 ),
                 mass_per_tile=maybeQ(klei_dict.get('maxMass'), 'kg'),
-                low_transition=_read_transition(klei_dict, 'low'),
-                high_transition=_read_transition(klei_dict, 'high')
+                low_transition=Transition.read(klei_dict, 'low'),
+                high_transition=Transition.read(klei_dict, 'high')
             )
         except KeyError as e:
             raise BadDefinitionError(
@@ -84,6 +108,13 @@ class Element:
         return ((self.mass_per_tile
                  / registry.parse_expression('1 m^3').to_base_units())
                 if self.mass_per_tile is not None else None)
+
+    def _resolve(self, mapping):
+        if self.low_transition:
+            self.low_transition._resolve(mapping)
+
+        if self.high_transition:
+            self.high_transition._resolve(mapping)
 
 
 def load_klei_definitions_from_file(yaml_in: IO) -> list[Element]:
@@ -107,5 +138,8 @@ def load_klei_definitions(data_path: Union[PathLike, str]) \
                 + load_one("solid.yaml"))
     for elem in all_defs:
         result[elem.name] = elem
+
+    for elem in result.values():
+        elem._resolve(result)
 
     return result

@@ -4,7 +4,7 @@ from typing import Tuple
 from pytest import fixture
 import yaml
 
-from oniref import Element
+from oniref import Element, Transition
 from oniref.units import Q
 
 
@@ -19,7 +19,7 @@ def water_fixture() -> Element:
 
 @fixture(name='water_states')
 def water_states_fixture(water) -> Tuple[Element, Element, Element]:
-    water = copy.deepcopy(water)
+    water_cpy: Element = copy.deepcopy(water)
     ice = Element("Ice",
                   Q(2.05, 'DTU/g/°C'),
                   Q(2.18, 'DTU/(m s)/°C'),
@@ -31,12 +31,12 @@ def water_states_fixture(water) -> Tuple[Element, Element, Element]:
                     Q(18.01528, 'g/mol'),
                     None)
 
-    water.low_transition = (0, ice.name)
-    water.high_transition = (100, steam.name)
-    ice.high_transition = (0, water.name)
-    steam.low_transition = (100, water.name)
+    water_cpy.low_transition = Transition(Q(0.0, 'degC'), ice)
+    water_cpy.high_transition = Transition(Q(100.0, 'degC'), steam)
+    ice.high_transition = Transition(Q(0.0, 'degC'), water_cpy)
+    steam.low_transition = Transition(Q(100.0, 'degC'), water_cpy)
 
-    return (ice, water, steam)
+    return (ice, water_cpy, steam)
 
 
 @fixture
@@ -54,12 +54,13 @@ def klei_definitions_dir(tmp_path, water_states):
             result['maxMass'] = elem.mass_per_tile.to('kg').m
 
         if elem.low_transition is not None:
-            result['lowTemp'] = elem.low_transition[0]
-            result['lowTempTransitionTarget'] = elem.low_transition[1]
+            result['lowTemp'] = elem.low_transition.temperature.to('degK').m
+            result['lowTempTransitionTarget'] = elem.low_transition.target.name
 
         if elem.high_transition is not None:
-            result['highTemp'] = elem.high_transition[0]
-            result['highTempTransitionTarget'] = elem.high_transition[1]
+            result['highTemp'] = elem.high_transition.temperature.to('degK').m
+            result['highTempTransitionTarget'] = \
+                elem.high_transition.target.name
 
         return result
 

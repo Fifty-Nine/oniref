@@ -1,4 +1,4 @@
-from oniref import Element
+from oniref import Element, Transition
 from oniref.units import Q
 
 
@@ -58,10 +58,10 @@ def test_from_klei_transitions():
         "thermalConductivity": 1,
         "defaultMass": 1000,
         "molarMass": 18.01528,
-        "lowTemp": 0,
-        "highTemp": 100,
+        "lowTemp": Q(0.0, 'degC').to('degK').m,
+        "highTemp": Q(100.0, 'degC').to('degK').m,
         "lowTempTransitionTarget": "Ice",
         "highTempTransitionTarget": "Steam"
     })
-    assert result.low_transition == (0, "Ice")
-    assert result.high_transition == (100, "Steam")
+    assert result.low_transition == Transition(Q(0.0, 'degC'), 'Ice')
+    assert result.high_transition == Transition(Q(100.0, 'degC'), 'Steam')
