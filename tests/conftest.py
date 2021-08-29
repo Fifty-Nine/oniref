@@ -5,12 +5,14 @@ from pytest import fixture
 import yaml
 
 from oniref import Element, Transition
+from oniref.elements import State
 from oniref.units import Q
 
 
 @fixture(name='water')
 def water_fixture() -> Element:
     return Element("Water",
+                   State.Liquid,
                    Q(4.179, 'DTU/g/°C'),
                    Q(0.609, 'DTU/(m s)/°C'),
                    Q(18.01528, 'g/mol'),
@@ -21,11 +23,13 @@ def water_fixture() -> Element:
 def water_states_fixture(water) -> Tuple[Element, Element, Element]:
     water_cpy: Element = copy.deepcopy(water)
     ice = Element("Ice",
+                  State.Solid,
                   Q(2.05, 'DTU/g/°C'),
                   Q(2.18, 'DTU/(m s)/°C'),
                   Q(18.01528, 'g/mol'),
                   Q(1100, 'kg'))
     steam = Element("Steam",
+                    State.Gas,
                     Q(4.179, 'DTU/g/°C'),
                     Q(0.184, 'DTU/(m s)/°C'),
                     Q(18.01528, 'g/mol'),
@@ -43,6 +47,7 @@ def water_states_fixture(water) -> Tuple[Element, Element, Element]:
 def klei_definitions_dir(tmp_path, water_states):
     def to_dict(elem):
         result = {'elementId': elem.name,
+                  'state': elem.state.name,
                   'specificHeatCapacity':
                       elem.specific_heat_capacity.to('DTU/g/°C').m,
                   'thermalConductivity':

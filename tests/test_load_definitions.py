@@ -10,6 +10,7 @@ def test_load_simple():
     contents = StringIO(
         yaml.dump(
             {"elements": [{"elementId": "Unobtanium",
+                           "state": "Vacuum",
                            "maxMass": 1234,
                            "specificHeatCapacity": 100,
                            "thermalConductivity": 1,
@@ -22,6 +23,7 @@ def test_load_simple():
     assert result == [
         OE.Element(
             "Unobtanium",
+            OE.State.Vacuum,
             specific_heat_capacity=Q(100, "DTU/g/degC"),
             thermal_conductivity=Q(1, "DTU/(m s)/degC"),
             molar_mass=Q(1111, "g/mol"),

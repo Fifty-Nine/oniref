@@ -54,6 +54,7 @@ def test_from_klei_simple(water):
 def test_from_klei_transitions():
     result = Element.from_klei({
         "elementId": "Water",
+        "state": "Liquid",
         "specificHeatCapacity": 1,
         "thermalConductivity": 1,
         "defaultMass": 1000,

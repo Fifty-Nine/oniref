@@ -1,5 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
+from enum import Enum
 from os import PathLike
 from pathlib import Path
 from typing import (Any,
@@ -13,6 +14,13 @@ import yaml
 from oniref.units import Q, maybeQ, registry
 
 #  pylint: disable=protected-access
+
+
+class State(Enum):
+    Vacuum = 0
+    Solid = 1
+    Liquid = 2
+    Gas = 3
 
 
 class Transition:
@@ -55,7 +63,7 @@ class MissingElementsError(Exception):
 class BadDefinitionError(Exception):
     def __init__(self, elem, inner):
         super().__init__(
-            self, f'Encountered bad definition for {elem}: {inner!s}'
+            self, f'Encountered bad definition for {elem}: {inner!r}'
         )
         self.elem = elem
         self.inner = inner
@@ -64,10 +72,11 @@ class BadDefinitionError(Exception):
 @dataclass
 class Element:
     name: str
+    state: State
     specific_heat_capacity: Q
     thermal_conductivity: Q
     molar_mass: Q
-    mass_per_tile: Optional[Q]
+    mass_per_tile: Optional[Q] = None
     low_transition: Optional[Transition] = None
     high_transition: Optional[Transition] = None
 
@@ -76,6 +85,7 @@ class Element:
         try:
             return Element(
                 name=klei_dict['elementId'],
+                state=State[klei_dict['state']],
                 specific_heat_capacity=Q(
                     klei_dict['specificHeatCapacity'], 'DTU/g/°C'
                 ),
