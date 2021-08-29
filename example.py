@@ -9,7 +9,9 @@ from oniref import load_klei_definitions, Quantity, State
 def interesting(elem):
     return (elem.state == State.Liquid
             and elem.low_transition is not None
-            and elem.low_transition.temperature < Quantity(-100, '°C'))
+            and elem.low_transition.temperature < Quantity(-20, '°C')
+            and (elem.high_transition is None
+                 or elem.high_transition.temperature > Quantity(-20, '°C')))
 
 
 def format(elem):
