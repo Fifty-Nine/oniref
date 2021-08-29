@@ -119,7 +119,8 @@ class Element:
 
 def load_klei_definitions_from_file(yaml_in: IO) -> list[Element]:
     try:
-        return [Element.from_klei(d) for d in yaml.load(yaml_in)['elements']]
+        return [Element.from_klei(d) for d
+                in yaml.safe_load(yaml_in)['elements']]
     except KeyError as e:
         raise MissingElementsError from e
 
