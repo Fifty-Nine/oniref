@@ -115,6 +115,16 @@ def test_find_pretty_regex(water_elements):
         assert elem in found
 
 
+def test_find_predicate(water_elements):
+    found = water_elements.find(
+        lambda e: e.mass_per_tile and e.mass_per_tile > Q(100, 'kg')
+    )
+
+    assert len(found) == 2
+    assert water_elements['Ice'] in found
+    assert water_elements['Water'] in found
+
+
 def test_find_bad_type(water_elements):
     with pytest.raises(TypeError):
         water_elements.find(None)

@@ -21,6 +21,8 @@ from oniref.strings import load_strings
 
 #  pylint: disable=protected-access
 
+Predicate = Callable[['Element'], bool]
+
 
 class State(Enum):
     Vacuum = 0
@@ -164,8 +166,8 @@ class Elements:
 
         raise TypeError(key)
 
-    def find(self, needle: Union[str, re.Pattern]):
-        match: Callable[[str], bool]
+    def find(self, needle: Union[str, re.Pattern, Predicate]):
+        match: Predicate
         if isinstance(needle, str):
             needlestr = cast(str, needle)
 
@@ -181,6 +183,10 @@ class Elements:
                         or pattern.search(elem.pretty_name))
 
             match = match_re
+
+        elif callable(needle):
+            match = cast(Predicate, needle)
+
         else:
             raise TypeError(needle)
 
