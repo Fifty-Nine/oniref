@@ -57,13 +57,13 @@ def test_missing_elements():
         OE.load_klei_definitions_from_file(contents)
 
 
-def test_load_all(klei_definitions_dir, water_states):
-    result = OE.load_klei_definitions(klei_definitions_dir)
+def test_load_all(oni_install_dir, water_states):
+    result = OE.load_klei_definitions(oni_install_dir)
 
     assert result['Ice'] == water_states[0]
     assert result['Water'] == water_states[1]
     assert result['Steam'] == water_states[2]
 
 
-def test_load_str_path(klei_definitions_dir):
-    OE.load_klei_definitions(str(klei_definitions_dir))
+def test_load_str_path(oni_install_dir):
+    OE.load_klei_definitions(str(oni_install_dir))

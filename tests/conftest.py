@@ -48,9 +48,8 @@ def water_elements(water_states) -> Elements:
     return Elements(water_states)
 
 
-@fixture
-def klei_definitions_dir(tmp_path, water_states):
-    elements_dir = (tmp_path / 'OxygenNotIncluded_Data'
+def populate_elements(oni_install_path, water_states):
+    elements_dir = (oni_install_path / 'OxygenNotIncluded_Data'
                     / 'StreamingAssets' / 'elements')
     elements_dir.mkdir(parents=True)
 
@@ -87,4 +86,11 @@ def klei_definitions_dir(tmp_path, water_states):
     write_one('liquid.yaml', water_states[1])
     write_one('gas.yaml', water_states[2])
 
-    return tmp_path
+    return oni_install_path
+
+
+@fixture
+def oni_install_dir(tmp_path, water_states):
+    result = tmp_path / 'oni'
+    populate_elements(result, water_states)
+    return result
