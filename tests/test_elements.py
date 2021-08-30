@@ -98,9 +98,26 @@ def test_find_element_regex(water_elements):
     assert water_elements.find(re.compile('Wat'))[0] is water_elements['Water']
 
     found = water_elements.find(re.compile('^Steam|Water|Ice$'))
-    assert water_elements['Water'] in found
-    assert water_elements['Steam'] in found
-    assert water_elements['Ice'] in found
+    assert len(found) == 3
+    for elem in water_elements:
+        assert elem in found
+
+
+def test_find_pretty_string(water_elements):
+    assert water_elements.find('Water (pretty)') == [water_elements['Water']]
+    assert water_elements.find('Water (pretty)')[0] is water_elements['Water']
+
+
+def test_find_pretty_regex(water_elements):
+    found = water_elements.find(re.compile('pretty'))
+    assert len(found) == 3
+    for elem in water_elements:
+        assert elem in found
+
+
+def test_find_bad_type(water_elements):
+    with pytest.raises(TypeError):
+        water_elements.find(None)
 
 
 def test_elements_index_bad_type(water_elements):

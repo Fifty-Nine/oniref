@@ -5,6 +5,7 @@ from os import PathLike
 from pathlib import Path
 import re
 from typing import (Any,
+                    Callable,
                     Dict,
                     IO,
                     Optional,
@@ -163,13 +164,27 @@ class Elements:
 
         raise TypeError(key)
 
-    def find(self, pattern: Union[str, re.Pattern]):
-        if isinstance(pattern, str):
-            return [elem for elem in self._defs
-                    if cast(str, pattern) in elem.name]
+    def find(self, needle: Union[str, re.Pattern]):
+        match: Callable[[str], bool]
+        if isinstance(needle, str):
+            needlestr = cast(str, needle)
 
-        return [elem for elem in self._defs
-                if cast(re.Pattern, pattern).search(elem.name) is not None]
+            def match_str(elem):
+                return needlestr in elem.name or needlestr in elem.pretty_name
+
+            match = match_str
+        elif isinstance(needle, re.Pattern):
+            pattern = cast(re.Pattern, needle)
+
+            def match_re(elem):
+                return (pattern.search(elem.name)
+                        or pattern.search(elem.pretty_name))
+
+            match = match_re
+        else:
+            raise TypeError(needle)
+
+        return [elem for elem in self._defs if match(elem)]
 
 
 def load_klei_definitions_from_file(yaml_in: IO) -> list[Element]:

@@ -49,9 +49,9 @@ def water_states_fixture(water) -> Tuple[Element, Element, Element]:
 
 @fixture(name='water_strings')
 def water_strings_fixture() -> Dict[str, str]:
-    return {'STRINGS.ELEMENTS.WATER.NAME': 'Water',
-            'STRINGS.ELEMENTS.ICE.NAME': 'Ice',
-            'STRINGS.ELEMENTS.STEAM.NAME': 'Steam'}
+    return {'STRINGS.ELEMENTS.WATER.NAME': 'Water (pretty)',
+            'STRINGS.ELEMENTS.ICE.NAME': 'Ice (pretty)',
+            'STRINGS.ELEMENTS.STEAM.NAME': 'Steam (pretty)'}
 
 
 @fixture
