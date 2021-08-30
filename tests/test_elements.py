@@ -1,3 +1,7 @@
+import re
+
+import pytest
+
 from oniref import Element, Transition
 from oniref.units import Q
 
@@ -66,3 +70,38 @@ def test_from_klei_transitions():
     })
     assert result.low_transition == Transition(Q(0.0, 'degC'), 'Ice')
     assert result.high_transition == Transition(Q(100.0, 'degC'), 'Steam')
+
+
+def test_elements_as_container(water_elements):
+    assert len(water_elements) == 3
+
+    as_list = []
+    for elem in water_elements:
+        as_list.append(elem)
+
+    assert len(as_list) == 3
+    assert water_elements['Ice'] in as_list
+    assert water_elements['Water'] in as_list
+    assert water_elements['Steam'] in as_list
+
+
+def test_find_element_string(water_elements):
+    assert water_elements.find('DirtyWater') == []
+    assert water_elements.find('Wat') == [water_elements['Water']]
+    assert water_elements.find('Wat')[0] is water_elements['Water']
+
+
+def test_find_element_regex(water_elements):
+    assert water_elements.find(re.compile('DirtyWater')) == []
+    assert water_elements.find(re.compile('Wat')) == [water_elements['Water']]
+    assert water_elements.find(re.compile('Wat'))[0] is water_elements['Water']
+
+    found = water_elements.find(re.compile('^Steam|Water|Ice$'))
+    assert water_elements['Water'] in found
+    assert water_elements['Steam'] in found
+    assert water_elements['Ice'] in found
+
+
+def test_elements_index_bad_type(water_elements):
+    with pytest.raises(TypeError):
+        _ = water_elements[None]

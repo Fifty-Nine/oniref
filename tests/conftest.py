@@ -4,7 +4,7 @@ from typing import Tuple
 from pytest import fixture
 import yaml
 
-from oniref import Element, Transition
+from oniref import Element, Elements, Transition
 from oniref.elements import State
 from oniref.units import Q
 
@@ -41,6 +41,11 @@ def water_states_fixture(water) -> Tuple[Element, Element, Element]:
     steam.low_transition = Transition(Q(100.0, 'degC'), water_cpy)
 
     return (ice, water_cpy, steam)
+
+
+@fixture
+def water_elements(water_states) -> Elements:
+    return Elements(water_states)
 
 
 @fixture

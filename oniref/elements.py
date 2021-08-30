@@ -3,10 +3,13 @@ from dataclasses import dataclass
 from enum import Enum
 from os import PathLike
 from pathlib import Path
+import re
 from typing import (Any,
                     IO,
                     Optional,
-                    Union)
+                    Sequence,
+                    Union,
+                    cast)
 from weakref import proxy, ProxyType
 
 import yaml
@@ -127,6 +130,37 @@ class Element:
             self.high_transition._resolve(mapping)
 
 
+class Elements:
+    def __init__(self, definitions: Sequence[Element]):
+        self._defs = tuple(definitions)
+        self._id_map = {}
+        for elem in self._defs:
+            self._id_map[elem.name] = elem
+
+        for elem in self._id_map.values():
+            elem._resolve(self)
+
+    def __len__(self):
+        return len(self._defs)
+
+    def __getitem__(self, key: Union[int, str]):
+        if isinstance(key, int):
+            return self._defs[cast(int, key)]
+
+        if isinstance(key, str):
+            return self._id_map[cast(str, key)]
+
+        raise TypeError(key)
+
+    def find(self, pattern: Union[str, re.Pattern]):
+        if isinstance(pattern, str):
+            return [elem for elem in self._defs
+                    if cast(str, pattern) in elem.name]
+
+        return [elem for elem in self._defs
+                if cast(re.Pattern, pattern).search(elem.name) is not None]
+
+
 def load_klei_definitions_from_file(yaml_in: IO) -> list[Element]:
     try:
         return [Element.from_klei(d) for d
@@ -135,22 +169,13 @@ def load_klei_definitions_from_file(yaml_in: IO) -> list[Element]:
         raise MissingElementsError from e
 
 
-def load_klei_definitions(data_path: Union[PathLike, str]) \
-        -> dict[str, Element]:
+def load_klei_definitions(data_path: Union[PathLike, str]) -> Elements:
     if isinstance(data_path, str):
         data_path = Path(data_path)
 
     def load_one(name):
         return load_klei_definitions_from_file((data_path / name).open('r'))
 
-    result = {}
-    all_defs = (load_one("gas.yaml")
-                + load_one("liquid.yaml")
-                + load_one("solid.yaml"))
-    for elem in all_defs:
-        result[elem.name] = elem
-
-    for elem in result.values():
-        elem._resolve(result)
-
-    return result
+    return Elements(load_one('gas.yaml')
+                    + load_one('liquid.yaml')
+                    + load_one('solid.yaml'))
