@@ -1,7 +1,7 @@
 This is just a quick little library I wrote for parsing the YAML files that
 define the elements in the game. The main entry point is
-`oniref.load_klei_definitions` which takes the path to the game's `elements`
-directory containing the YAML files. The function returns a dict that
+`oniref.load_klei_definitions` which takes the path to the game's
+installation directory. The function returns a dict that
 maps the game's internal name for the element (e.g. `MoltenLead`) to
 an instance of the `Element` type which records the various properties.
 
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 Which produces something like:
 
 ```
-$ ./example.py [path to elements files]
+$ ./example.py [path to ONI installation]
 Name            SHC (DTU/g/°C)    TC (DTU/(m*s)/°C)    TD (mm^2/s)    TLow (°C)    THigh (°C)                                                                                                                                                                                               
 ------------  ----------------  -------------------  -------------  -----------  ------------                                                                                                                                                                                               
 Ethanol                  2.46                 0.171      0.0695122      -114.05         78.35                                                                                                                                                                                               

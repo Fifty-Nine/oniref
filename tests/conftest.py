@@ -50,6 +50,10 @@ def water_elements(water_states) -> Elements:
 
 @fixture
 def klei_definitions_dir(tmp_path, water_states):
+    elements_dir = (tmp_path / 'OxygenNotIncluded_Data'
+                    / 'StreamingAssets' / 'elements')
+    elements_dir.mkdir(parents=True)
+
     def to_dict(elem):
         result = {'elementId': elem.name,
                   'state': elem.state.name,
@@ -75,7 +79,7 @@ def klei_definitions_dir(tmp_path, water_states):
         return result
 
     def write_one(name, elem):
-        (tmp_path / name).write_text(
+        (elements_dir / name).write_text(
             yaml.dump({'elements': [to_dict(elem)]})
         )
 

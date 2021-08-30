@@ -169,9 +169,10 @@ def load_klei_definitions_from_file(yaml_in: IO) -> list[Element]:
         raise MissingElementsError from e
 
 
-def load_klei_definitions(data_path: Union[PathLike, str]) -> Elements:
-    if isinstance(data_path, str):
-        data_path = Path(data_path)
+def load_klei_definitions(oni_path: Union[PathLike, str]) -> Elements:
+    data_path: Path = Path(oni_path)
+    data_path = (data_path / 'OxygenNotIncluded_Data' / 'StreamingAssets'
+                 / 'elements')
 
     def load_one(name):
         return load_klei_definitions_from_file((data_path / name).open('r'))
