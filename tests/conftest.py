@@ -1,6 +1,7 @@
 import copy
-from typing import Tuple
+from typing import Dict, Tuple
 
+from polib import POFile, POEntry
 from pytest import fixture
 import yaml
 
@@ -11,7 +12,8 @@ from oniref.units import Q
 
 @fixture(name='water')
 def water_fixture() -> Element:
-    return Element("Water",
+    return Element('Water',
+                   'STRINGS.ELEMENTS.WATER.NAME',
                    State.Liquid,
                    Q(4.179, 'DTU/g/°C'),
                    Q(0.609, 'DTU/(m s)/°C'),
@@ -23,12 +25,14 @@ def water_fixture() -> Element:
 def water_states_fixture(water) -> Tuple[Element, Element, Element]:
     water_cpy: Element = copy.deepcopy(water)
     ice = Element("Ice",
+                  'STRINGS.ELEMENTS.ICE.NAME',
                   State.Solid,
                   Q(2.05, 'DTU/g/°C'),
                   Q(2.18, 'DTU/(m s)/°C'),
                   Q(18.01528, 'g/mol'),
                   Q(1100, 'kg'))
     steam = Element("Steam",
+                    'STRINGS.ELEMENTS.STEAM.NAME',
                     State.Gas,
                     Q(4.179, 'DTU/g/°C'),
                     Q(0.184, 'DTU/(m s)/°C'),
@@ -43,9 +47,16 @@ def water_states_fixture(water) -> Tuple[Element, Element, Element]:
     return (ice, water_cpy, steam)
 
 
+@fixture(name='water_strings')
+def water_strings_fixture() -> Dict[str, str]:
+    return {'STRINGS.ELEMENTS.WATER.NAME': 'Water',
+            'STRINGS.ELEMENTS.ICE.NAME': 'Ice',
+            'STRINGS.ELEMENTS.STEAM.NAME': 'Steam'}
+
+
 @fixture
-def water_elements(water_states) -> Elements:
-    return Elements(water_states)
+def water_elements(water_states, water_strings) -> Elements:
+    return Elements(water_states, water_strings)
 
 
 def populate_elements(oni_install_path, water_states):
@@ -61,7 +72,8 @@ def populate_elements(oni_install_path, water_states):
                   'thermalConductivity':
                       elem.thermal_conductivity.to('DTU/(m s)/°C').m,
                   'molarMass':
-                      elem.molar_mass.to('g/mol').m}
+                      elem.molar_mass.to('g/mol').m,
+                  'localizationID': elem.pretty_name}
 
         if elem.mass_per_tile is not None:
             result['maxMass'] = elem.mass_per_tile.to('kg').m
@@ -89,8 +101,21 @@ def populate_elements(oni_install_path, water_states):
     return oni_install_path
 
 
+def populate_strings(oni_install_path, water_strings):
+    strings_dir = (oni_install_path / 'OxygenNotIncluded_Data'
+                   / 'StreamingAssets' / 'strings')
+    strings_dir.mkdir(parents=True)
+    po = POFile()
+
+    for name, val in water_strings.items():
+        po.append(POEntry(msgctxt=name, msgid=val, msgstr=''))
+
+    po.save(strings_dir / 'strings_template.pot')
+
+
 @fixture
-def oni_install_dir(tmp_path, water_states):
+def oni_install_dir(tmp_path, water_states, water_strings):
     result = tmp_path / 'oni'
     populate_elements(result, water_states)
+    populate_strings(result, water_strings)
     return result

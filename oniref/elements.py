@@ -5,6 +5,7 @@ from os import PathLike
 from pathlib import Path
 import re
 from typing import (Any,
+                    Dict,
                     IO,
                     Optional,
                     Sequence,
@@ -15,6 +16,7 @@ from weakref import proxy, ProxyType
 import yaml
 
 from oniref.units import Q, maybeQ, registry
+from oniref.strings import load_strings
 
 #  pylint: disable=protected-access
 
@@ -75,6 +77,7 @@ class BadDefinitionError(Exception):
 @dataclass
 class Element:
     name: str
+    pretty_name: str
     state: State
     specific_heat_capacity: Q
     thermal_conductivity: Q
@@ -88,6 +91,7 @@ class Element:
         try:
             return Element(
                 name=klei_dict['elementId'],
+                pretty_name=klei_dict['localizationID'],
                 state=State[klei_dict['state']],
                 specific_heat_capacity=Q(
                     klei_dict['specificHeatCapacity'], 'DTU/g/°C'
@@ -122,23 +126,30 @@ class Element:
                  / registry.parse_expression('1 m^3').to_base_units())
                 if self.mass_per_tile is not None else None)
 
-    def _resolve(self, mapping):
+    def _resolve(self, mapping, strings):
         if self.low_transition:
             self.low_transition._resolve(mapping)
 
         if self.high_transition:
             self.high_transition._resolve(mapping)
 
+        self.pretty_name = strings.get(self.pretty_name, self.pretty_name)
+
+    def __eq__(self, o):
+        return self.name == o.name
+
 
 class Elements:
-    def __init__(self, definitions: Sequence[Element]):
+    def __init__(self,
+                 definitions: Sequence[Element],
+                 strings: Dict[str, str]):
         self._defs = tuple(definitions)
         self._id_map = {}
         for elem in self._defs:
             self._id_map[elem.name] = elem
 
         for elem in self._id_map.values():
-            elem._resolve(self)
+            elem._resolve(self, strings)
 
     def __len__(self):
         return len(self._defs)
@@ -170,13 +181,18 @@ def load_klei_definitions_from_file(yaml_in: IO) -> list[Element]:
 
 
 def load_klei_definitions(oni_path: Union[PathLike, str]) -> Elements:
-    data_path: Path = Path(oni_path)
-    data_path = (data_path / 'OxygenNotIncluded_Data' / 'StreamingAssets'
-                 / 'elements')
+    assets_path: Path = (Path(oni_path) / 'OxygenNotIncluded_Data'
+                         / 'StreamingAssets')
+
+    elements_path = assets_path / 'elements'
+    strings_path = assets_path / 'strings'
 
     def load_one(name):
-        return load_klei_definitions_from_file((data_path / name).open('r'))
+        return load_klei_definitions_from_file(
+            (elements_path / name).open('r')
+        )
 
     return Elements(load_one('gas.yaml')
                     + load_one('liquid.yaml')
-                    + load_one('solid.yaml'))
+                    + load_one('solid.yaml'),
+                    load_strings(strings_path / 'strings_template.pot'))

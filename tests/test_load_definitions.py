@@ -15,21 +15,23 @@ def test_load_simple():
                            "specificHeatCapacity": 100,
                            "thermalConductivity": 1,
                            "molarMass": 1111,
+                           "localizationID":
+                               "STRINGS.ELEMENTS.UNOBTANIUM.NAME",
                            "unexpected_key": "ayy"}]}
         )
     )
 
     result = OE.load_klei_definitions_from_file(contents)
-    assert result == [
-        OE.Element(
-            "Unobtanium",
-            OE.State.Vacuum,
-            specific_heat_capacity=Q(100, "DTU/g/degC"),
-            thermal_conductivity=Q(1, "DTU/(m s)/degC"),
-            molar_mass=Q(1111, "g/mol"),
-            mass_per_tile=Q(1234, "kg")
-        )
-    ]
+    assert len(result) == 1
+    result = result[0]
+
+    assert result.name == 'Unobtanium'
+    assert result.pretty_name == 'STRINGS.ELEMENTS.UNOBTANIUM.NAME'
+    assert result.state == OE.State.Vacuum
+    assert result.specific_heat_capacity == Q(100, "DTU/g/degC")
+    assert result.thermal_conductivity == Q(1, "DTU/(m s)/degC")
+    assert result.molar_mass == Q(1111, "g/mol")
+    assert result.mass_per_tile == Q(1234, "kg")
 
 
 def test_missing_name():
