@@ -2,8 +2,9 @@ import re
 
 import pytest
 
+import pint
 from oniref import Element, Transition
-from oniref.units import Q
+from oniref.units import Q, Unit
 
 
 def test_diffusivity(water):
@@ -133,3 +134,44 @@ def test_find_bad_type(water_elements):
 def test_elements_index_bad_type(water_elements):
     with pytest.raises(TypeError):
         _ = water_elements[None]
+
+
+def test_delta_q(water):
+    result = water.ΔQ(ΔT=Q(1, 'delta_degC'), mass=Q(1, 'g'))
+
+    assert result == Q(4.179, 'DTU')
+
+
+def test_delta_q_diff_units(water):
+    result = water.ΔQ(ΔT=Q(1, '°K'), mass=Q(1, 'kg'))
+
+    assert result == Q(4.179, 'kDTU')
+
+
+def test_delta_q_diff_bad_units(water):
+    with pytest.raises(pint.DimensionalityError):
+        water.ΔQ(ΔT=Q(1, 'm'), mass=Q(1, 'g'))
+
+    with pytest.raises(pint.DimensionalityError):
+        water.ΔQ(ΔT=Q(1, 'delta_degC'), mass=Q(1, 'm'))
+
+
+def test_delta_t(water):
+    result = water.ΔT(ΔQ=Q(4.179, 'DTU'), mass=Q(1, 'g'))
+
+    assert result == Q(1, 'delta_degC')
+
+
+def test_delta_t_diff_units(water):
+    result = water.ΔT(ΔQ=Q(4.179, 'kJ'), mass=Q(1, 'g'))
+
+    assert result.units == Unit('delta_degC')
+    assert result.m == pytest.approx(1000)
+
+
+def test_delta_t_diff_bad_units(water):
+    with pytest.raises(pint.DimensionalityError):
+        water.ΔT(ΔQ=Q(1, 'm'), mass=Q(1, 'g'))
+
+    with pytest.raises(pint.DimensionalityError):
+        water.ΔT(ΔQ=Q(1, 'DTU'), mass=Q(1, 'm'))

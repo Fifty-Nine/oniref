@@ -15,7 +15,7 @@ from weakref import proxy, ProxyType
 
 import yaml
 
-from oniref.units import Q, maybeQ, registry
+from oniref.units import Q, maybeQ
 from oniref.strings import load_strings, KleiStrings
 
 #  pylint: disable=protected-access
@@ -124,8 +124,7 @@ class Element:
 
     @property
     def density(self) -> Optional[Q]:
-        return ((self.mass_per_tile
-                 / registry.parse_expression('1 m^3').to_base_units())
+        return (self.mass_per_tile / Q(1, 'm^3')
                 if self.mass_per_tile is not None else None)
 
     def _resolve(self, mapping, strings):
@@ -136,6 +135,23 @@ class Element:
             self.high_transition._resolve(mapping)
 
         self.pretty_name = strings.get(self.pretty_name, self.pretty_name)
+
+    def ΔQ(self, ΔT: Q, mass: Q):
+        """
+        Compute the heat energy gained or lost when changing the temperature of
+        'mass' units of this element by 'ΔT' degrees.
+        """
+        return (self.specific_heat_capacity
+                * ΔT.to('delta_degC')
+                * mass.to('g')).to_compact()
+
+    def ΔT(self, ΔQ: Q, mass: Q):
+        """
+        Compute the temperature change when heating 'mass' units of
+        this element with 'ΔQ' units of heat.
+        """
+        return (ΔQ.to('DTU') / (self.specific_heat_capacity
+                                * mass.to('g')))
 
     def __eq__(self, o):
         return self.name == o.name
