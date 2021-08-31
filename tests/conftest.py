@@ -1,5 +1,5 @@
 import copy
-from typing import Dict, Tuple
+from typing import Tuple
 
 from polib import POFile, POEntry
 from pytest import fixture
@@ -8,6 +8,7 @@ import yaml
 from oniref import Element, Elements, Transition
 from oniref.elements import State
 from oniref.units import Q
+from oniref.strings import KleiStrings
 
 
 @fixture(name='water')
@@ -48,10 +49,11 @@ def water_states_fixture(water) -> Tuple[Element, Element, Element]:
 
 
 @fixture(name='water_strings')
-def water_strings_fixture() -> Dict[str, str]:
-    return {'STRINGS.ELEMENTS.WATER.NAME': 'Water (pretty)',
-            'STRINGS.ELEMENTS.ICE.NAME': 'Ice (pretty)',
-            'STRINGS.ELEMENTS.STEAM.NAME': 'Steam (pretty)'}
+def water_strings_fixture() -> KleiStrings:
+    return KleiStrings(
+        {'STRINGS.ELEMENTS.WATER.NAME': 'Water <xml>(pretty)</xml>',
+         'STRINGS.ELEMENTS.ICE.NAME': 'Ice (pretty)',
+         'STRINGS.ELEMENTS.STEAM.NAME': 'Steam (pretty)'})
 
 
 @fixture
@@ -107,8 +109,10 @@ def populate_strings(oni_install_path, water_strings):
     strings_dir.mkdir(parents=True)
     po = POFile()
 
-    for name, val in water_strings.items():
-        po.append(POEntry(msgctxt=name, msgid=val, msgstr=''))
+    for name, value in water_strings.items():
+        po.append(POEntry(msgctxt=name,
+                          msgid=value,
+                          msgstr=''))
 
     po.save(strings_dir / 'strings_template.pot')
 

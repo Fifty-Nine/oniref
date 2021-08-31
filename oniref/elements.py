@@ -6,7 +6,6 @@ from pathlib import Path
 import re
 from typing import (Any,
                     Callable,
-                    Dict,
                     IO,
                     Optional,
                     Sequence,
@@ -17,7 +16,7 @@ from weakref import proxy, ProxyType
 import yaml
 
 from oniref.units import Q, maybeQ, registry
-from oniref.strings import load_strings
+from oniref.strings import load_strings, KleiStrings
 
 #  pylint: disable=protected-access
 
@@ -145,7 +144,7 @@ class Element:
 class Elements:
     def __init__(self,
                  definitions: Sequence[Element],
-                 strings: Dict[str, str]):
+                 strings: KleiStrings):
         self._defs = tuple(definitions)
         self._id_map = {}
         for elem in self._defs:
