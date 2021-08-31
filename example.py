@@ -9,13 +9,13 @@ from oniref import load_klei_definitions, Quantity, State
 def interesting(elem):
     return (elem.state == State.Liquid
             and (elem.high_transition is None or
-                 elem.high_transition.temperature > Quantity(250, '°C'))
+                 elem.high_transition.temperature > Quantity(95, '°C'))
             and (elem.low_transition is None or
-                 elem.low_transition.temperature > Quantity(-100, 'degC')))
+                 elem.low_transition.temperature <= Quantity(30, '°C')))
 
 
 def format(elem):
-    return [elem.name,
+    return [elem.pretty_name,
             elem.specific_heat_capacity.to('DTU/g/°C').m,
             elem.thermal_conductivity.to('DTU/(m*s)/°C').m,
             (elem.thermal_diffusivity.to('mm^2/s').m
@@ -29,16 +29,12 @@ def format(elem):
 
 
 def main(args):
-    elements = load_klei_definitions(args[0])
+    elements = sorted(
+        load_klei_definitions(args[0]).find(interesting),
+        key=lambda e: e.thermal_conductivity or Quantity(1, 'DTU/m*s/degC')
+    )
 
-    filtered = sorted([elem for elem 
-                       in elements.values()
-                       if interesting(elem)
-                      ],
-                      key=lambda e: e.molar_mass or Quantity(0, 'g/mol')
-                     )
-
-    print(tabulate([format(e) for e in filtered],
+    print(tabulate([format(e) for e in elements],
                    headers=['Name',
                             'SHC (DTU/g/°C)',
                             'TC (DTU/(m*s)/°C)',
