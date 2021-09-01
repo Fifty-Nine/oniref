@@ -17,6 +17,8 @@ def test_load_simple():
                            "molarMass": 1111,
                            "localizationID":
                                "STRINGS.ELEMENTS.UNOBTANIUM.NAME",
+                           "radiationAbsorptionFactor": 1.0,
+                           "radiationPer1000Mass": 5,
                            "unexpected_key": "ayy"}]}
         )
     )
@@ -32,6 +34,8 @@ def test_load_simple():
     assert result.thermal_conductivity == Q(1, "DTU/(m s)/degC")
     assert result.molar_mass == Q(1111, "g/mol")
     assert result.mass_per_tile == Q(1234, "kg")
+    assert result.radiation_absorption == Q(1.0, 'dimensionless')
+    assert result.radioactivity == Q(5, 'rads/kg')
 
 
 def test_missing_name():

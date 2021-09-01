@@ -19,6 +19,8 @@ def water_fixture() -> Element:
                    Q(4.179, 'DTU/g/°C'),
                    Q(0.609, 'DTU/(m s)/°C'),
                    Q(18.01528, 'g/mol'),
+                   Q(0.8, 'dimensionless'),
+                   Q(0, 'rads/kg'),
                    Q(1000, 'kg'))
 
 
@@ -31,6 +33,8 @@ def water_states_fixture(water) -> Tuple[Element, Element, Element]:
                   Q(2.05, 'DTU/g/°C'),
                   Q(2.18, 'DTU/(m s)/°C'),
                   Q(18.01528, 'g/mol'),
+                  Q(0.8, 'dimensionless'),
+                  Q(0, 'rads/kg'),
                   Q(1100, 'kg'))
     steam = Element("Steam",
                     'STRINGS.ELEMENTS.STEAM.NAME',
@@ -38,7 +42,8 @@ def water_states_fixture(water) -> Tuple[Element, Element, Element]:
                     Q(4.179, 'DTU/g/°C'),
                     Q(0.184, 'DTU/(m s)/°C'),
                     Q(18.01528, 'g/mol'),
-                    None)
+                    Q(0.08, 'dimensionless'),
+                    Q(0, 'rads/kg'))
 
     water_cpy.low_transition = Transition(Q(0.0, 'degC'), ice)
     water_cpy.high_transition = Transition(Q(100.0, 'degC'), steam)
@@ -75,7 +80,11 @@ def populate_elements(oni_install_path, water_states):
                       elem.thermal_conductivity.to('DTU/(m s)/°C').m,
                   'molarMass':
                       elem.molar_mass.to('g/mol').m,
-                  'localizationID': elem.pretty_name}
+                  'localizationID': elem.pretty_name,
+                  'radiationAbsorptionFactor':
+                      elem.radiation_absorption.to('dimensionless').m,
+                  'radiationPer1000Mass':
+                      elem.radioactivity.to('rads/kg').m}
 
         if elem.mass_per_tile is not None:
             result['maxMass'] = elem.mass_per_tile.to('kg').m

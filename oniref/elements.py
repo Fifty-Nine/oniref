@@ -84,6 +84,8 @@ class Element:
     specific_heat_capacity: Q
     thermal_conductivity: Q
     molar_mass: Q
+    radiation_absorption: Q
+    radioactivity: Q
     mass_per_tile: Optional[Q] = None
     low_transition: Optional[Transition] = None
     high_transition: Optional[Transition] = None
@@ -103,6 +105,12 @@ class Element:
                 ),
                 molar_mass=Q(
                     klei_dict['molarMass'], 'g/mol'
+                ),
+                radiation_absorption=Q(
+                    klei_dict['radiationAbsorptionFactor'], 'dimensionless'
+                ),
+                radioactivity=Q(
+                    klei_dict['radiationPer1000Mass'], 'rads/kg'
                 ),
                 mass_per_tile=maybeQ(klei_dict.get('maxMass'), 'kg'),
                 low_transition=Transition.read(klei_dict, 'low'),

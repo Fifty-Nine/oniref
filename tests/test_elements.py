@@ -68,7 +68,9 @@ def test_from_klei_transitions():
         "highTemp": Q(100.0, 'degC').to('degK').m,
         "lowTempTransitionTarget": "Ice",
         "highTempTransitionTarget": "Steam",
-        "localizationID": "STRINGS.ELEMENTS.WATER.NAME"
+        "localizationID": "STRINGS.ELEMENTS.WATER.NAME",
+        "radiationAbsorptionFactor": 1.0,
+        "radiationPer1000Mass": 0
     })
     assert result.low_transition == Transition(Q(0.0, 'degC'), 'Ice')
     assert result.high_transition == Transition(Q(100.0, 'degC'), 'Steam')
