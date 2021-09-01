@@ -177,3 +177,8 @@ def test_delta_t_diff_bad_units(water):
 
     with pytest.raises(pint.DimensionalityError):
         water.ΔT(ΔQ=Q(1, 'DTU'), mass=Q(1, 'm'))
+
+
+def test_print_transition(water_elements):
+    assert (str(water_elements['Water'].low_transition)
+            == 'Ice (pretty) @ 0.0 degree_Celsius')

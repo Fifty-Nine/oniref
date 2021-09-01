@@ -57,6 +57,9 @@ class Transition:
 
         return Transition(Q(temp, '°K').to('°C'), target)
 
+    def __str__(self):
+        return f'{self.target.pretty_name} @ {self.temperature}'
+
 
 class MissingElementsError(Exception):
     def __init__(self):
