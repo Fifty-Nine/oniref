@@ -5,7 +5,8 @@ from oniref.predicates import (Predicate, Attribute,
                                And, Or, Not,
                                state, is_solid, is_liquid, is_gas,
                                low_temp, high_temp,
-                               stable_at, stable_over)
+                               stable_at, stable_over,
+                               Element)
 
 
 def test_simple_predicate(water):
@@ -238,3 +239,12 @@ def test_stable_over(water_elements):
     assert not boil(water_elements['Ice'])
     assert not boil(water_elements['Water'])
     assert not boil(water_elements['Steam'])
+
+
+def test_element_predicate(water):
+    assert (Element.name == 'Water')(water)
+    assert isinstance(Element.specific_heat_capacity, Attribute)
+
+    bad_pred = Element.name_that_does_not_exist
+    with pytest.raises(AttributeError):
+        bad_pred(water)

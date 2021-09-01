@@ -2,18 +2,18 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from oniref.elements import Element, State
+from oniref.elements import Element as OElement, State
 from oniref.units import Q
 
-SimplePredicate = Callable[[Element], bool]
-SimpleAttribute = Callable[[Element], Any]
+SimplePredicate = Callable[[OElement], bool]
+SimpleAttribute = Callable[[OElement], Any]
 
 
 class Predicate:
     def __init__(self, pred: SimplePredicate):
         self._pred = pred
 
-    def __call__(self, e: Element) -> bool:
+    def __call__(self, e: OElement) -> bool:
         return self._pred(e)
 
     def __and__(self, o: 'Predicate') -> 'Predicate':
@@ -45,14 +45,14 @@ class Attribute:
     def __ge__(self, v: object) -> Predicate:
         return Predicate(lambda e: self(e) >= v)
 
-    def __call__(self, e: Element) -> Any:
+    def __call__(self, e: OElement) -> Any:
         return self._attr(e)
 
     def Is(self, v: Any) -> Predicate:
         return Predicate(lambda e: self(e) is v)
 
     def In(self, *v: Any) -> Predicate:
-        def result(e: Element):
+        def result(e: OElement):
             attr = self(e)
             if len(v) == 1:
                 try:
@@ -65,10 +65,21 @@ class Attribute:
         return Predicate(result)
 
     def __getattr__(self, name) -> Attribute:
-        def attr(e: Element) -> Any:
+        def attr(e: OElement) -> Any:
             return getattr(self(e), name)
 
         return Attribute(attr)
+
+
+def _make_element_type():
+    class ElementType:
+        def __getattr__(self, name):
+            return Attribute(lambda e: getattr(e, name))
+
+    return ElementType()
+
+
+Element = _make_element_type()
 
 
 def And(l: Predicate, r: Predicate) -> Predicate:
