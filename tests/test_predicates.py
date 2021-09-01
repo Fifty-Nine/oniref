@@ -1,9 +1,9 @@
 import pytest
 
-from oniref import State, Quantity
+from oniref import Quantity
 from oniref.predicates import (Predicate, Attribute,
                                And, Or, Not,
-                               state, is_solid, is_liquid, is_gas,
+                               is_solid, is_liquid, is_gas,
                                low_temp, high_temp,
                                stable_at, stable_over,
                                Element)
@@ -141,16 +141,6 @@ def test_attr_chain(water_elements):
 def test_attr_is(water_elements):
     pred = (Attribute(lambda e: e.low_transition)
             .target.Is(water_elements['Ice']))
-    assert pred(water_elements['Water'])
-    assert not pred(water_elements['Steam'])
-
-
-def test_state(water_elements):
-    pred = state() == State.Liquid
-    assert pred(water_elements['Water'])
-    assert not pred(water_elements['Ice'])
-
-    pred = state().In([State.Solid, State.Liquid])
     assert pred(water_elements['Water'])
     assert not pred(water_elements['Steam'])
 

@@ -94,20 +94,16 @@ def Not(p: Predicate) -> Predicate:
     return ~p
 
 
-def state() -> Attribute:
-    return Attribute(lambda e: e.state)
-
-
 def is_solid():
-    return state() == State.Solid
+    return Element.state == State.Solid
 
 
 def is_liquid() -> Predicate:
-    return state() == State.Liquid
+    return Element.state == State.Liquid
 
 
 def is_gas() -> Predicate:
-    return state() == State.Gas
+    return Element.state == State.Gas
 
 
 def low_temp() -> Attribute:
