@@ -11,8 +11,6 @@ from typing import (Any,
                     Sequence,
                     Union,
                     cast)
-from weakref import proxy, ProxyType
-
 import yaml
 
 from oniref.units import Q, maybeQ
@@ -32,18 +30,18 @@ class State(Enum):
 
 class Transition:
     temperature: Q
-    target: Union[str, ProxyType['Element']]
+    target: Union[str, 'Element']
 
     def __init__(self, temperature: Q, target: Union[str, Element]):
         self.temperature = temperature
-        self.target = target if isinstance(target, str) else proxy(target)
+        self.target = target if isinstance(target, str) else target
 
     def _name(self):
         return (self.target if isinstance(self.target, str)
                 else self.target.name)
 
     def _resolve(self, mapping):
-        self.target = proxy(mapping[self._name()])
+        self.target = mapping[self._name()]
 
     def __eq__(self, o):
         return (o.temperature == self.temperature
