@@ -53,6 +53,12 @@ class Attribute:
     def __ge__(self, v: object) -> Predicate:
         return Predicate(lambda e: self._attr(e) >= v)
 
+    def _wrap_attr_call(self, *args, **kwargs) -> Any:
+        def wrap(e):
+            return self._attr(e)(*args, **kwargs)
+
+        return wrap
+
     def __call__(self, *args, **kwargs) -> Any:
         # `Element.foo(element)` is ambiguous. It could mean the user
         # wants `element.foo`, or they may want `Element.foo(element)`.
@@ -68,11 +74,8 @@ class Attribute:
                 )
             )
 
-            def wrap(e):
-                return self._attr(e)(*args, **kwargs)
-
             return Attribute(
-                wrap,
+                self._wrap_attr_call(*args, **kwargs),
                 f'{self._desc}({arg_string})'
             )
 
@@ -101,6 +104,27 @@ class Attribute:
         return Attribute(attr, f'{self._desc}.{name}')
 
 
+class OptionalAttribute(Attribute):
+    def __repr__(self):
+        return f'OptionalAttribute({self._desc})'
+
+    def _wrap_attr_call(self, *args, **kwargs) -> Callable[[OElement], Any]:
+        base = super()._wrap_attr_call(*args, **kwargs)
+
+        def wrap(e):
+            # base calls _attr(e) so no need to wrap it.
+            return base(e) if self._attr(e) is not None else None
+
+        return wrap
+
+    def __getattr__(self, name) -> Attribute:
+        def attr(e: OElement) -> Any:
+            parent = self._attr(e)
+            return getattr(parent, name) if parent is not None else None
+
+        return OptionalAttribute(attr, f'{self._desc}.?{name}')
+
+
 def _make_element_type():
     class ElementType:
         def __getattr__(self, name):
@@ -122,6 +146,10 @@ def Or(l: Predicate, r: Predicate) -> Predicate:
 
 def Not(p: Predicate) -> Predicate:
     return ~p
+
+
+def optional(attr: Attribute) -> Attribute:
+    return OptionalAttribute(attr, str(attr))
 
 
 def is_solid():

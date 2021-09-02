@@ -1,8 +1,9 @@
 import pytest
 
 from oniref import Quantity
-from oniref.predicates import (Predicate, Attribute,
+from oniref.predicates import (Predicate, Attribute, OptionalAttribute,
                                And, Or, Not,
+                               optional,
                                is_solid, is_liquid, is_gas,
                                low_temp, high_temp,
                                stable_at, stable_over,
@@ -145,6 +146,28 @@ def test_attr_is(water_elements):
     assert not pred(water_elements['Steam'])
 
 
+def test_attr_str():
+    assert str(Element.pretty_name) == 'Element.pretty_name'
+    assert repr(Element.pretty_name) == 'Attribute(Element.pretty_name)'
+
+
+def test_opt_attr_attr(water_elements):
+    attr = OptionalAttribute(lambda e: e.low_transition)
+
+    assert attr(water_elements['Ice']) is None
+    assert attr.temperature(water_elements['Ice']) is None
+
+    assert attr(water_elements['Water']) is not None
+    assert attr.target(water_elements['Water']) is water_elements['Ice']
+
+
+def test_opt_attr_str():
+    assert (str(optional(Element.low_transition).target)
+            == 'Element.low_transition.?target')
+    assert (repr(optional(Element.low_transition).target)
+            == 'OptionalAttribute(Element.low_transition.?target)')
+
+
 def test_liquid(water_elements):
     pred = is_liquid()
     assert pred(water_elements['Water'])
@@ -240,11 +263,11 @@ def test_element_predicate(water):
         bad_pred(water)
 
 
-def test_attr_str():
-    assert str(Element.pretty_name) == 'Element.pretty_name'
-    assert repr(Element.pretty_name) == 'Attribute(Element.pretty_name)'
-
-
 def test_call_expr(water):
     attr = Element.molar_mass.to('ounce/mol').m
     assert attr(water) == pytest.approx(water.molar_mass.to('ounce/mol').m)
+
+
+def test_opt_call_expr(water):
+    attr = optional(Element.mass_per_tile).to('pound').m
+    assert attr(water) == pytest.approx(water.mass_per_tile.to('pound').m)
