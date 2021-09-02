@@ -17,13 +17,13 @@ class Predicate:
         return self._pred(e)
 
     def __and__(self, o: 'Predicate') -> 'Predicate':
-        return Predicate(lambda e: self(e) and o(e))
+        return Predicate(lambda e: self._pred(e) and o(e))
 
     def __or__(self, o: 'Predicate') -> 'Predicate':
-        return Predicate(lambda e: self(e) or o(e))
+        return Predicate(lambda e: self._pred(e) or o(e))
 
     def __invert__(self) -> 'Predicate':
-        return Predicate(lambda e: not self(e))
+        return Predicate(lambda e: not self._pred(e))
 
 
 class Attribute:
@@ -38,29 +38,29 @@ class Attribute:
         return self._desc
 
     def __lt__(self, v: object) -> Predicate:
-        return Predicate(lambda e: self(e) < v)
+        return Predicate(lambda e: self._attr(e) < v)
 
     def __le__(self, v: object) -> Predicate:
-        return Predicate(lambda e: self(e) <= v)
+        return Predicate(lambda e: self._attr(e) <= v)
 
     def __eq__(self, v: object) -> Predicate:  # type: ignore[override]
-        return Predicate(lambda e: self(e) == v)
+        return Predicate(lambda e: self._attr(e) == v)
 
     def __gt__(self, v: object) -> Predicate:
-        return Predicate(lambda e: self(e) > v)
+        return Predicate(lambda e: self._attr(e) > v)
 
     def __ge__(self, v: object) -> Predicate:
-        return Predicate(lambda e: self(e) >= v)
+        return Predicate(lambda e: self._attr(e) >= v)
 
     def __call__(self, e: OElement) -> Any:
         return self._attr(e)
 
     def Is(self, v: Any) -> Predicate:
-        return Predicate(lambda e: self(e) is v)
+        return Predicate(lambda e: self._attr(e) is v)
 
     def In(self, *v: Any) -> Predicate:
         def result(e: OElement):
-            attr = self(e)
+            attr = self._attr(e)
             if len(v) == 1:
                 try:
                     return attr in v[0]
@@ -73,7 +73,7 @@ class Attribute:
 
     def __getattr__(self, name) -> Attribute:
         def attr(e: OElement) -> Any:
-            return getattr(self(e), name)
+            return getattr(self._attr(e), name)
 
         return Attribute(attr, f'{self._desc}.{name}')
 
