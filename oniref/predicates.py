@@ -173,17 +173,11 @@ def is_gas() -> Predicate:
 
 
 def low_temp() -> Attribute:
-    return Attribute(
-        lambda e: e.low_transition and e.low_transition.temperature,
-        'e.low_transition.?temperature'
-    )
+    return optional(Element.low_transition).temperature
 
 
 def high_temp() -> Attribute:
-    return Attribute(
-        lambda e: e.high_transition and e.high_transition.temperature,
-        'e.high_transition.?temperature'
-    )
+    return optional(Element.high_transition).temperature
 
 
 def stable_at(temp: Q):

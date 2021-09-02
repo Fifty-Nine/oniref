@@ -197,6 +197,12 @@ def test_low_temp(water_elements):
     with pytest.raises(ValueError):
         pred(water_elements['Ice'])
 
+    assert low_temp()(water_elements['Ice']) is None
+    assert high_temp()(water_elements['Steam']) is None
+
+    assert low_temp().to('°K')(water_elements['Ice']) is None
+    assert high_temp().to('°K')(water_elements['Steam']) is None
+
 
 def test_high_temp(water_elements):
     pred = high_temp() > Quantity(10, '°C')
