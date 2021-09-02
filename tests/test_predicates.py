@@ -238,3 +238,8 @@ def test_element_predicate(water):
     bad_pred = Element.name_that_does_not_exist
     with pytest.raises(AttributeError):
         bad_pred(water)
+
+
+def test_attr_str():
+    assert str(Element.pretty_name) == 'Element.pretty_name'
+    assert repr(Element.pretty_name) == 'Attribute(Element.pretty_name)'

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any, Callable, Optional
 
 from oniref.elements import Element as OElement, State
 from oniref.units import Q
@@ -27,8 +27,15 @@ class Predicate:
 
 
 class Attribute:
-    def __init__(self, attr: SimpleAttribute):
+    def __init__(self, attr: SimpleAttribute, desc: Optional[str] = None):
         self._attr = attr
+        self._desc = desc
+
+    def __repr__(self):
+        return f'Attribute({self._desc})'
+
+    def __str__(self):
+        return self._desc
 
     def __lt__(self, v: object) -> Predicate:
         return Predicate(lambda e: self(e) < v)
@@ -68,13 +75,13 @@ class Attribute:
         def attr(e: OElement) -> Any:
             return getattr(self(e), name)
 
-        return Attribute(attr)
+        return Attribute(attr, f'{self._desc}.{name}')
 
 
 def _make_element_type():
     class ElementType:
         def __getattr__(self, name):
-            return Attribute(lambda e: getattr(e, name))
+            return Attribute(lambda e: getattr(e, name), f'Element.{name}')
 
     return ElementType()
 
@@ -108,13 +115,15 @@ def is_gas() -> Predicate:
 
 def low_temp() -> Attribute:
     return Attribute(
-        lambda e: e.low_transition and e.low_transition.temperature
+        lambda e: e.low_transition and e.low_transition.temperature,
+        'e.low_transition.?temperature'
     )
 
 
 def high_temp() -> Attribute:
     return Attribute(
-        lambda e: e.high_transition and e.high_transition.temperature
+        lambda e: e.high_transition and e.high_transition.temperature,
+        'e.high_transition.?temperature'
     )
 
 
