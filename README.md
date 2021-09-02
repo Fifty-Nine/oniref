@@ -6,7 +6,7 @@ maps the game's internal name for the element (e.g. `MoltenLead`) to
 an instance of the `Element` type which records the various properties.
 
 Here is an example program that will list all the liquid elements
-which are stable between 30°C and 95°C sorted in order of their
+which are stable between 30°C and 90°C sorted in order of their
 thermal conductivity.
 
 ```python
@@ -36,15 +36,19 @@ columns = {
 
 def main(args):
     result = sorted(
+        # Load all the definitions from the game directory.
         load_klei_definitions(args[0]).find(
+            # Limit to only those which are liquids stable between 30 and 90 °C.
             OP.is_liquid() & OP.stable_over(Quantity(30, '°C'),
                                             Quantity(90, '°C'))
         ),
+        # Sort by the thermal conductivity.
         key=OP.Element.thermal_conductivity
     )
 
     print(
         tabulate(
+            # Create a dictionary mapping column names to a list of the values.
             {k: [v(e) for e in result] for k, v in columns.items()},
             headers='keys'
         )
