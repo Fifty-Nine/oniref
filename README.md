@@ -9,7 +9,7 @@ Here is an example program that will list all the liquid elements
 which are stable between 30°C and 95°C sorted in order of their
 thermal conductivity.
 
-```
+```python
 #!/usr/bin/env python3
 
 import dataclasses
