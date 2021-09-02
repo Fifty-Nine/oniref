@@ -182,3 +182,10 @@ def test_delta_t_diff_bad_units(water):
 def test_print_transition(water_elements):
     assert (str(water_elements['Water'].low_transition)
             == 'Ice (pretty) @ 0.0 degree_Celsius')
+
+
+def test_element_str(water_elements):
+    # Using _elements to ensure .pretty_name is resolved.
+    water = water_elements['Water']
+    assert str(water) == 'Water (pretty)'
+    assert repr(water) == "Element(name='Water')"

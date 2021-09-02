@@ -91,6 +91,12 @@ class Element:
     low_transition: Optional[Transition] = None
     high_transition: Optional[Transition] = None
 
+    def __repr__(self):
+        return f"Element(name='{self.name}')"
+
+    def __str__(self):
+        return self.pretty_name
+
     @staticmethod
     def from_klei(klei_dict: dict) -> Element:
         try:
