@@ -271,3 +271,11 @@ def test_call_expr(water):
 def test_opt_call_expr(water):
     attr = optional(Element.mass_per_tile).to('pound').m
     assert attr(water) == pytest.approx(water.mass_per_tile.to('pound').m)
+
+    water.mass_per_tile = None
+    assert attr(water) is None
+
+    attr = optional(Element.mass_per_tile)
+    assert attr(water) is None
+    assert attr.to('pound')(water) is None
+    assert attr.to('pound').m(water) is None

@@ -59,6 +59,10 @@ class Attribute:
 
         return wrap
 
+    @staticmethod
+    def _child(attr, desc):
+        return Attribute(attr, desc)
+
     def __call__(self, *args, **kwargs) -> Any:
         # `Element.foo(element)` is ambiguous. It could mean the user
         # wants `element.foo`, or they may want `Element.foo(element)`.
@@ -74,7 +78,7 @@ class Attribute:
                 )
             )
 
-            return Attribute(
+            return self._child(
                 self._wrap_attr_call(*args, **kwargs),
                 f'{self._desc}({arg_string})'
             )
@@ -101,12 +105,16 @@ class Attribute:
         def attr(e: OElement) -> Any:
             return getattr(self._attr(e), name)
 
-        return Attribute(attr, f'{self._desc}.{name}')
+        return self._child(attr, f'{self._desc}.{name}')
 
 
 class OptionalAttribute(Attribute):
     def __repr__(self):
         return f'OptionalAttribute({self._desc})'
+
+    @staticmethod
+    def _child(attr, desc):
+        return OptionalAttribute(attr, desc)
 
     def _wrap_attr_call(self, *args, **kwargs) -> Callable[[OElement], Any]:
         base = super()._wrap_attr_call(*args, **kwargs)
@@ -122,7 +130,7 @@ class OptionalAttribute(Attribute):
             parent = self._attr(e)
             return getattr(parent, name) if parent is not None else None
 
-        return OptionalAttribute(attr, f'{self._desc}.?{name}')
+        return self._child(attr, f'{self._desc}.?{name}')
 
 
 def _make_element_type():
