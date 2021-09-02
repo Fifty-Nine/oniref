@@ -243,3 +243,8 @@ def test_element_predicate(water):
 def test_attr_str():
     assert str(Element.pretty_name) == 'Element.pretty_name'
     assert repr(Element.pretty_name) == 'Attribute(Element.pretty_name)'
+
+
+def test_call_expr(water):
+    attr = Element.molar_mass.to('ounce/mol').m
+    assert attr(water) == pytest.approx(water.molar_mass.to('ounce/mol').m)

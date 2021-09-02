@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import itertools
 from typing import Any, Callable, Optional
 
 from oniref.elements import Element as OElement, State
@@ -52,8 +53,30 @@ class Attribute:
     def __ge__(self, v: object) -> Predicate:
         return Predicate(lambda e: self._attr(e) >= v)
 
-    def __call__(self, e: OElement) -> Any:
-        return self._attr(e)
+    def __call__(self, *args, **kwargs) -> Any:
+        # `Element.foo(element)` is ambiguous. It could mean the user
+        # wants `element.foo`, or they may want `Element.foo(element)`.
+        # We resolve the ambiguity by testing whether `foo` is callable.
+        # If it is, we return a new attribute object instead of
+        # `element.foo` since this is a much less common use case.
+        if (len(args) != 1 or not isinstance(args[0], OElement)
+                or callable(self._attr(args[0]))):
+            arg_string = ','.join(
+                itertools.chain(
+                    (repr(arg) for arg in args),
+                    (f'{key}={value!r}' for key, value in kwargs.items())
+                )
+            )
+
+            def wrap(e):
+                return self._attr(e)(*args, **kwargs)
+
+            return Attribute(
+                wrap,
+                f'{self._desc}({arg_string})'
+            )
+
+        return self._attr(args[0])
 
     def Is(self, v: Any) -> Predicate:
         return Predicate(lambda e: self._attr(e) is v)
