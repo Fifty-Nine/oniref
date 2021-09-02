@@ -1,47 +1,42 @@
 #!/usr/bin/env python3
 
+import dataclasses
 import sys
 from tabulate import tabulate
 
 from oniref import load_klei_definitions, Quantity, State
+from oniref import predicates as OP
 
 
-def interesting(elem):
-    return (elem.state == State.Liquid
-            and (elem.high_transition is None or
-                 elem.high_transition.temperature > Quantity(95, '°C'))
-            and (elem.low_transition is None or
-                 elem.low_transition.temperature <= Quantity(30, '°C')))
-
-
-def format(elem):
-    return [elem.pretty_name,
-            elem.specific_heat_capacity.to('DTU/g/°C').m,
-            elem.thermal_conductivity.to('DTU/(m*s)/°C').m,
-            (elem.thermal_diffusivity.to('mm^2/s').m
-             if elem.thermal_diffusivity is not None else None),
-            (elem.low_transition.temperature.to('°C').m
-             if elem.low_transition is not None else None),
-            (elem.high_transition.temperature.to('°C').m
-             if elem.high_transition is not None else None),
-            elem.molar_mass.m]
-
+# Defines the table format. The key is the column header text and the value
+# is a function that describes how to get the values for the column.
+columns = {
+    'Name'             : OP.Element.pretty_name,
+    'SHC (DTU/g/°C)'   : OP.Element.specific_heat_capacity.to('DTU/g/°C').m,
+    'TC (DTU/(m*s)/°C)': OP.Element.thermal_conductivity.to('DTU/(m*s)/°C').m,
+    'TD (mm^2/s)'      : (OP.optional(OP.Element.thermal_diffusivity)
+                          .to('mm^2/s').m),
+    'MM (g/mol)'       : OP.Element.molar_mass.to('g/mol').m,
+    'TLow (°C)'        : OP.low_temp().to('°C').m,
+    'THigh (°C)'       : OP.high_temp().to('°C').m
+}
 
 
 def main(args):
-    elements = sorted(
-        load_klei_definitions(args[0]).find(interesting),
-        key=lambda e: e.thermal_conductivity or Quantity(1, 'DTU/m*s/degC')
+    result = sorted(
+        load_klei_definitions(args[0]).find(
+            OP.is_liquid() & OP.stable_over(Quantity(30, '°C'),
+                                            Quantity(90, '°C'))
+        ),
+        key=OP.Element.thermal_conductivity
     )
 
-    print(tabulate([format(e) for e in elements],
-                   headers=['Name',
-                            'SHC (DTU/g/°C)',
-                            'TC (DTU/(m*s)/°C)',
-                            'TD (mm^2/s)',
-                            'TLow (°C)',
-                            'THigh (°C)',
-                            'MM (g/mol)']))
+    print(
+        tabulate(
+            {k: [v(e) for e in result] for k, v in columns.items()},
+            headers='keys'
+        )
+    )
 
 if __name__ == "__main__":
     main(sys.argv[1:])

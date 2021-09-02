@@ -12,48 +12,43 @@ thermal conductivity.
 ```
 #!/usr/bin/env python3
 
+import dataclasses
 import sys
 from tabulate import tabulate
 
 from oniref import load_klei_definitions, Quantity, State
+from oniref import predicates as OP
 
 
-def interesting(elem):
-    return (elem.state == State.Liquid
-            and (elem.high_transition is None or
-                 elem.high_transition.temperature > Quantity(95, '°C'))
-            and (elem.low_transition is None or
-                 elem.low_transition.temperature <= Quantity(30, '°C')))
-
-
-def format(elem):
-    return [elem.pretty_name,
-            elem.specific_heat_capacity.to('DTU/g/°C').m,
-            elem.thermal_conductivity.to('DTU/(m*s)/°C').m,
-            (elem.thermal_diffusivity.to('mm^2/s').m
-             if elem.thermal_diffusivity is not None else None),
-            (elem.low_transition.temperature.to('°C').m
-             if elem.low_transition is not None else None),
-            (elem.high_transition.temperature.to('°C').m
-             if elem.high_transition is not None else None),
-            elem.molar_mass.m]
-
+# Defines the table format. The key is the column header text and the value
+# is a function that describes how to get the values for the column.
+columns = {
+    'Name'             : OP.Element.pretty_name,
+    'SHC (DTU/g/°C)'   : OP.Element.specific_heat_capacity.to('DTU/g/°C').m,
+    'TC (DTU/(m*s)/°C)': OP.Element.thermal_conductivity.to('DTU/(m*s)/°C').m,
+    'TD (mm^2/s)'      : (OP.optional(OP.Element.thermal_diffusivity)
+                          .to('mm^2/s').m),
+    'MM (g/mol)'       : OP.Element.molar_mass.to('g/mol').m,
+    'TLow (°C)'        : OP.low_temp().to('°C').m,
+    'THigh (°C)'       : OP.high_temp().to('°C').m
+}
 
 
 def main(args):
-    elements = sorted(
-        load_klei_definitions(args[0]).find(interesting),
-        key=lambda e: e.thermal_conductivity or Quantity(1, 'DTU/m*s/degC')
+    result = sorted(
+        load_klei_definitions(args[0]).find(
+            OP.is_liquid() & OP.stable_over(Quantity(30, '°C'),
+                                            Quantity(90, '°C'))
+        ),
+        key=OP.Element.thermal_conductivity
     )
 
-    print(tabulate([format(e) for e in elements],
-                   headers=['Name',
-                            'SHC (DTU/g/°C)',
-                            'TC (DTU/(m*s)/°C)',
-                            'TD (mm^2/s)',
-                            'TLow (°C)',
-                            'THigh (°C)',
-                            'MM (g/mol)']))
+    print(
+        tabulate(
+            {k: [v(e) for e in result] for k, v in columns.items()},
+            headers='keys'
+        )
+    )
 
 if __name__ == "__main__":
     main(sys.argv[1:])
@@ -62,19 +57,18 @@ if __name__ == "__main__":
 Which produces something like:
 
 ```
-$ ./example.py [path to ONI installation]
-Name              SHC (DTU/g/°C)    TC (DTU/(m*s)/°C)    TD (mm^2/s)    TLow (°C)    THigh (°C)    MM (g/mol)
---------------  ----------------  -------------------  -------------  -----------  ------------  ------------
-Resin                      1.11                 0.15        0.146886        20           125          52.5
-Naphtha                    2.191                0.2         0.123355       -50.15        538.85      102.2
-Visco-Gel                  1.55                 0.45        2.90323        -30.65        479.85       10
-Polluted Water             4.179                0.58        0.138789       -20.65        119.35       20
-Brine                      3.4                  0.609       0.149265       -22.5         102.75       22
-Salt Water                 4.1                  0.609       0.135033        -7.5          99.69       21
-Water                      4.179                0.609       0.145729        -0.65         99.35       18.0153
-Crude Oil                  1.69                 2           1.36027        -40.15        399.85      500
-Petroleum                  1.76                 2           1.53563        -57.15        538.85       82.2
-Nuclear Waste              7.44                 6           0.806452        26.85        526.85      196.967
-Mercury                    0.14                 8.3        59.2857         -38.85        356.75      200.59
-Super Coolant              8.44                 9.46        1.23171       -271.15        436.85      250
+Name              SHC (DTU/g/°C)    TC (DTU/(m*s)/°C)    TD (mm^2/s)    MM (g/mol)    TLow (°C)    THigh (°C)
+--------------  ----------------  -------------------  -------------  ------------  -----------  ------------
+Resin                      1.11                 0.15        0.146886       52.5           20           125
+Naphtha                    2.191                0.2         0.123355      102.2          -50.15        538.85
+Visco-Gel                  1.55                 0.45        2.90323        10            -30.65        479.85
+Polluted Water             4.179                0.58        0.138789       20            -20.65        119.35
+Brine                      3.4                  0.609       0.149265       22            -22.5         102.75
+Salt Water                 4.1                  0.609       0.135033       21             -7.5          99.69
+Water                      4.179                0.609       0.145729       18.0153        -0.65         99.35
+Crude Oil                  1.69                 2           1.36027       500            -40.15        399.85
+Petroleum                  1.76                 2           1.53563        82.2          -57.15        538.85
+Nuclear Waste              7.44                 6           0.806452      196.967         26.85        526.85
+Mercury                    0.14                 8.3        59.2857        200.59         -38.85        356.75
+Super Coolant              8.44                 9.46        1.23171       250           -271.15        436.85
 ```
