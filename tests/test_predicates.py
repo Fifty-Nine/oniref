@@ -285,3 +285,12 @@ def test_opt_call_expr(water):
     assert attr(water) is None
     assert attr.to('pound')(water) is None
     assert attr.to('pound').m(water) is None
+
+
+@pytest.mark.xfail(
+    reason='Predicate operators fail for null OptionalAttributes.'
+)
+def test_issue_1(water_elements):
+    pred = (optional(Element.low_transition).target
+            == water_elements['Water'])
+    assert not pred(water_elements['Ice'])
