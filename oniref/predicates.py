@@ -10,23 +10,6 @@ SimplePredicate = Callable[[OElement], bool]
 SimpleAttribute = Callable[[OElement], Any]
 
 
-class Predicate:
-    def __init__(self, pred: SimplePredicate):
-        self._pred = pred
-
-    def __call__(self, e: OElement) -> bool:
-        return self._pred(e)
-
-    def __and__(self, o: 'Predicate') -> 'Predicate':
-        return Predicate(lambda e: self._pred(e) and o(e))
-
-    def __or__(self, o: 'Predicate') -> 'Predicate':
-        return Predicate(lambda e: self._pred(e) or o(e))
-
-    def __invert__(self) -> 'Predicate':
-        return Predicate(lambda e: not self._pred(e))
-
-
 class Attribute:
     def __init__(self, attr: SimpleAttribute, desc: Optional[str] = None):
         self._attr = attr
@@ -36,7 +19,7 @@ class Attribute:
         return f'Attribute({self._desc})'
 
     def __str__(self):
-        return self._desc
+        return self._desc or '<unknown attribute>'
 
     def __lt__(self, v: object) -> Predicate:
         return Predicate(lambda e: self._attr(e) < v)
@@ -131,6 +114,30 @@ class OptionalAttribute(Attribute):
             return getattr(parent, name) if parent is not None else None
 
         return self._child(attr, f'{self._desc}.?{name}')
+
+
+class Predicate(Attribute):
+    @staticmethod
+    def _cast_attr(attr: SimpleAttribute) -> SimplePredicate:
+        return lambda e: bool(attr(e))
+
+    def __and__(self, o: SimpleAttribute) -> Predicate:
+        return Predicate(
+            lambda e: self._attr(e) and self._cast_attr(o)(e),
+            f'{self} and {o}'
+        )
+
+    def __or__(self, o: SimpleAttribute) -> Predicate:
+        return Predicate(
+            lambda e: self._attr(e) or self._cast_attr(o)(e),
+            f'{self} or {o}'
+        )
+
+    def __invert__(self) -> Predicate:
+        return Predicate(
+            lambda e: not self._attr(e),
+            f'not {self}'
+        )
 
 
 def _make_element_type():
