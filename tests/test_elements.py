@@ -67,13 +67,16 @@ def test_from_klei_transitions():
         "lowTemp": Q(0.0, 'degC').to('degK').m,
         "highTemp": Q(100.0, 'degC').to('degK').m,
         "lowTempTransitionTarget": "Ice",
+        "lowTempTransitionOreId": "LowOre",
         "highTempTransitionTarget": "Steam",
+        "highTempTransitionOreId": "HighOre",
         "localizationID": "STRINGS.ELEMENTS.WATER.NAME",
         "radiationAbsorptionFactor": 1.0,
         "radiationPer1000Mass": 0
     })
-    assert result.low_transition == Transition(Q(0.0, 'degC'), 'Ice')
-    assert result.high_transition == Transition(Q(100.0, 'degC'), 'Steam')
+    assert result.low_transition == Transition(Q(0.0, 'degC'), 'Ice', 'LowOre')
+    assert (result.high_transition
+            == Transition(Q(100.0, 'degC'), 'Steam', 'HighOre'))
 
 
 def test_elements_as_container(water_elements):
@@ -134,7 +137,13 @@ def test_find_bad_type(water_elements):
 
 
 def test_elements_index_bad_type(water_elements):
-    with pytest.raises(TypeError):
+    with pytest.raises(KeyError):
+        class Dummy:
+            pass
+
+        _ = water_elements[Dummy()]
+
+    with pytest.raises(KeyError):
         _ = water_elements[None]
 
 
@@ -179,9 +188,13 @@ def test_delta_t_diff_bad_units(water):
         water.ΔT(ΔQ=Q(1, 'DTU'), mass=Q(1, 'm'))
 
 
-def test_print_transition(water_elements):
+def test_transition_str(water_elements):
     assert (str(water_elements['Water'].low_transition)
             == 'Ice (pretty) @ 0.0 degree_Celsius')
+
+    water_elements['Water'].low_transition.ore = water_elements['Steam']
+    assert (str(water_elements['Water'].low_transition)
+            == 'Ice (pretty) + Steam (pretty) @ 0.0 degree_Celsius')
 
 
 def test_element_str(water_elements):

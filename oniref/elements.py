@@ -31,34 +31,47 @@ class State(Enum):
 class Transition:
     temperature: Q
     target: Union[str, 'Element']
+    ore: Optional[Union[str, 'Element']]
 
-    def __init__(self, temperature: Q, target: Union[str, Element]):
+    def __init__(
+            self,
+            temperature: Q,
+            target: Union[str, Element],
+            ore: Optional[Union[str, Element]] = None):
         self.temperature = temperature
-        self.target = target if isinstance(target, str) else target
+        self.target = target
+        self.ore = ore
 
     def _name(self):
         return (self.target if isinstance(self.target, str)
                 else self.target.name)
 
+    def _ore_name(self):
+        return self.ore.name if isinstance(self.ore, Element) else self.ore
+
     def _resolve(self, mapping):
         self.target = mapping[self._name()]
+        self.ore = mapping.get(self._ore_name(), None)
 
     def __eq__(self, o):
         return (o.temperature == self.temperature
-                and o._name() == self._name())
+                and o._name() == self._name()
+                and o._ore_name() == self._ore_name())
 
     @staticmethod
     def read(klei_dict: dict[str, Any], prefix: str) -> Optional[Transition]:
         temp = klei_dict.get(f'{prefix}Temp')
         target = klei_dict.get(f'{prefix}TempTransitionTarget')
+        ore = klei_dict.get(f'{prefix}TempTransitionOreId')
 
         if temp is None or target is None:
             return None
 
-        return Transition(Q(temp, '°K').to('°C'), target)
+        return Transition(Q(temp, '°K').to('°C'), target, ore)
 
     def __str__(self):
-        return f'{self.target.pretty_name} @ {self.temperature}'
+        ore_str = f' + {self.ore.pretty_name}' if self.ore is not None else ''
+        return f'{self.target.pretty_name}{ore_str} @ {self.temperature}'
 
 
 class MissingElementsError(Exception):
@@ -191,10 +204,13 @@ class Elements:
         if isinstance(key, int):
             return self._defs[cast(int, key)]
 
-        if isinstance(key, str):
-            return self._id_map[cast(str, key)]
+        return self._id_map[cast(str, key)]
 
-        raise TypeError(key)
+    def get(self, key, default=None):
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
     def find(self, needle: Union[str, re.Pattern, Predicate]):
         match: Predicate
