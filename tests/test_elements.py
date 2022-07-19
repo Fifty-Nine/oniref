@@ -68,15 +68,18 @@ def test_from_klei_transitions():
         "highTemp": Q(100.0, 'degC').to('degK').m,
         "lowTempTransitionTarget": "Ice",
         "lowTempTransitionOreId": "LowOre",
+        "lowTempTransitionOreMassConversion": "123.45",
         "highTempTransitionTarget": "Steam",
         "highTempTransitionOreId": "HighOre",
+        "highTempTransitionOreMassConversion": "543.21",
         "localizationID": "STRINGS.ELEMENTS.WATER.NAME",
         "radiationAbsorptionFactor": 1.0,
         "radiationPer1000Mass": 0
     })
-    assert result.low_transition == Transition(Q(0.0, 'degC'), 'Ice', 'LowOre')
+    assert (result.low_transition
+            == Transition(Q(0.0, 'degC'), 'Ice', 'LowOre', 123.45))
     assert (result.high_transition
-            == Transition(Q(100.0, 'degC'), 'Steam', 'HighOre'))
+            == Transition(Q(100.0, 'degC'), 'Steam', 'HighOre', 543.21))
 
 
 def test_elements_as_container(water_elements):

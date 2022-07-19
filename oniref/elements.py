@@ -32,15 +32,18 @@ class Transition:
     temperature: Q
     target: Union[str, 'Element']
     ore: Optional[Union[str, 'Element']]
+    ore_ratio: Optional[float]
 
     def __init__(
             self,
             temperature: Q,
             target: Union[str, Element],
-            ore: Optional[Union[str, Element]] = None):
+            ore: Optional[Union[str, Element]] = None,
+            ore_ratio: Optional[float] = None):
         self.temperature = temperature
         self.target = target
         self.ore = ore
+        self.ore_ratio = ore_ratio
 
     def _name(self):
         return (self.target if isinstance(self.target, str)
@@ -63,11 +66,15 @@ class Transition:
         temp = klei_dict.get(f'{prefix}Temp')
         target = klei_dict.get(f'{prefix}TempTransitionTarget')
         ore = klei_dict.get(f'{prefix}TempTransitionOreId')
+        ore_ratio = klei_dict.get(f'{prefix}TempTransitionOreMassConversion')
+        ore_ratio = float(ore_ratio) if ore_ratio is not None else None
 
         if temp is None or target is None:
             return None
 
-        return Transition(Q(temp, '°K').to('°C'), target, ore)
+        return Transition(
+            Q(float(temp), '°K').to('°C'), target, ore, ore_ratio
+        )
 
     def __str__(self):
         ore_str = f' + {self.ore.pretty_name}' if self.ore is not None else ''
